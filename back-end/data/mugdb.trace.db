@@ -1,3 +1,9 @@
 2025-10-06 09:43:23.059545+03:00 jdbc[13]: exception
 org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "Select * from [*]user"; expected "identifier"; SQL statement:
 Select * from user [42001-232]
+2025-10-06 10:32:39.354518+03:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "MUGS" not found; SQL statement:
+Select * from mugs [42102-232]
+2025-10-06 10:32:47.057299+03:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "MUGS" not found; SQL statement:
+Select * from MUGS [42102-232]

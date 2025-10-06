@@ -16,8 +16,13 @@ public class UserService {
     }
 
     public List<User> findAll() {
-        return _userRepository.findAll();
+        // Use the custom method that fetches mugs
+        return _userRepository.findAllWithMugs();
     }
+
+    // public List<User> findAll() {
+    //     return _userRepository.findAll();
+    // }
 
     public Optional<User> findById(String id) {
         return _userRepository.findById(id);

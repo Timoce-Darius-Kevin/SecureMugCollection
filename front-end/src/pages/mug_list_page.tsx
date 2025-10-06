@@ -6,7 +6,7 @@ import type { Mug } from "../model/mug";
 export function MugListPage() {
   const { data: mugs, error, isLoading } = useMugs();
   const deleteMug = useDeleteMug();
-
+  console.log("Mugs data:", mugs);
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this mug?')) {
       await deleteMug.mutateAsync(id);

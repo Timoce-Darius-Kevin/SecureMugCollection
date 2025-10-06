@@ -2,7 +2,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { mugApi } from '../../../API/mug_api';
 import { useAuth0 } from '@auth0/auth0-react';
-import type { Mug } from '../../../model/mug';
 import type { MugDTO } from '../../../model/mugDTO';
 
 export function useMugs() {
@@ -12,7 +11,6 @@ export function useMugs() {
     queryKey: ['mugs'],
     queryFn: async () => {
       const token = await getAccessTokenSilently();
-      console.log("Fetching mugs with token:", token);
       return mugApi.getAllMugs(token);
     }
   });
