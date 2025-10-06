@@ -1,71 +1,73 @@
 package com.example.mug_backend.controller;
 
 import com.example.mug_backend.service.MugService;
+import com.example.mug_backend.service.Auth0UserService;
 import com.example.mug_backend.model.Mug;
+import com.example.mug_backend.model.User;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import org.springframework.scheduling.annotation.Async;
 
 @RestController
-@RequestMapping("/mugs")
+@RequestMapping("api/mugs")
 public class MugController {
     private final MugService mugService;
+    private final Auth0UserService auth0UserService;
 
-    public MugController(MugService service){
-        this.mugService = service;
+    public MugController(MugService mugService, Auth0UserService auth0UserService) {
+        this.mugService = mugService;
+        this.auth0UserService = auth0UserService;
     }
 
-    // Get all mugs (async)
-    @Async
     @GetMapping
-    public CompletableFuture<List<Mug>> getAll(){
-        return CompletableFuture.completedFuture(mugService.findAll());
-    }
-
-    // Get mug by ID (async, with 404 handling)
-    @Async
-    @GetMapping("/{id}")
-    public CompletableFuture<ResponseEntity<Mug>> getById(@PathVariable Long id) {
-        Mug mug = mugService.findById(id);
-        if (mug != null) {
-            return CompletableFuture.completedFuture(ResponseEntity.ok(mug));
+    public ResponseEntity<List<Mug>> getAllMugs(@AuthenticationPrincipal Jwt jwt) {
+        User currentUser = auth0UserService.getUserFromJwt(jwt).orElse(null);
+        
+        if (currentUser != null && currentUser.getRole() == com.example.mug_backend.constants.Roles.ADMIN) {
+            return ResponseEntity.ok(mugService.findAll());
         } else {
-            return CompletableFuture.completedFuture(ResponseEntity.notFound().build());
+            String userId = jwt.getSubject();
+            return ResponseEntity.ok(mugService.findByUserId(userId));
         }
     }
 
-    // Create a new mug
-    @Async
     @PostMapping
-    public CompletableFuture<ResponseEntity<Mug>> create(@RequestBody Mug mug) {
+    public ResponseEntity<Mug> createMug(@RequestBody Mug mug, @AuthenticationPrincipal Jwt jwt) {
+        User currentUser = auth0UserService.getOrCreateUserFromJwt(jwt);
+        mug.setUser(currentUser);
         Mug created = mugService.save(mug);
-        return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.CREATED).body(created));
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    // Update an existing mug
-    @Async
     @PutMapping("/{id}")
-    public CompletableFuture<ResponseEntity<Mug>> update(@PathVariable Long id, @RequestBody Mug mug) {
-        Mug updated = mugService.update(id, mug);
-        if (updated != null) {
-            return CompletableFuture.completedFuture(ResponseEntity.ok(updated));
-        } else {
-            return CompletableFuture.completedFuture(ResponseEntity.notFound().build());
+    public ResponseEntity<Mug> update(@PathVariable Long id, @RequestBody Mug mug, @AuthenticationPrincipal Jwt jwt) {
+        Mug existingMug = mugService.findById(id);
+        User currentUser = auth0UserService.getOrCreateUserFromJwt(jwt);
+        
+        // Add ownership check
+        if (existingMug == null || !existingMug.getUser().getId().equals(currentUser.getId())) {
+            return ResponseEntity.notFound().build();
         }
+        
+        Mug updated = mugService.update(id, mug);
+        return updated != null ? ResponseEntity.ok(updated) : ResponseEntity.notFound().build();
     }
 
-    // Delete a mug
-    @Async
     @DeleteMapping("/{id}")
-    public CompletableFuture<ResponseEntity<Void>> delete(@PathVariable Long id) {
-        boolean deleted = mugService.delete(id);
-        if (deleted) {
-            return CompletableFuture.completedFuture(ResponseEntity.noContent().build());
-        } else {
-            return CompletableFuture.completedFuture(ResponseEntity.notFound().build());
+    public ResponseEntity<Void> delete(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+        Mug existingMug = mugService.findById(id);
+        User currentUser = auth0UserService.getOrCreateUserFromJwt(jwt);
+        
+        // Add ownership check
+        if (existingMug == null || !existingMug.getUser().getId().equals(currentUser.getId())) {
+            return ResponseEntity.notFound().build();
         }
+        
+        boolean deleted = mugService.delete(id);
+        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 }

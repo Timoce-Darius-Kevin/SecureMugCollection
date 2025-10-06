@@ -2,6 +2,8 @@ package com.example.mug_backend.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.GeneratedValue;
 
 @Entity
@@ -14,18 +16,30 @@ public class Mug{
     private String description;
     private double diameter;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
     public Mug() {
     }
 
-    public Mug(String name, String material, String description, double diameter) {
+    public Mug(String name, String material, String description, double diameter, User user) {
         this.name = name;
         this.material = material;
         this.description = description;
         this.diameter = diameter;
+        this.user = user;
     }
 
     public long getId() {
         return id;
+    }
+
+    public User getUser() {
+        return user;
+    }
+    public void setUser(User currentUser) {
+        this.user = currentUser;
     }
 
     public String getName() {

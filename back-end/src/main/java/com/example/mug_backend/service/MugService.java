@@ -40,4 +40,8 @@ public class MugService {
         }
         return false;
     }
+
+    public List<Mug> findByUserId(String userId) {
+            return _mugRepository.findByUserId(userId);
+        }
 }
